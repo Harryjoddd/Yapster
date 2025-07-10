@@ -15,44 +15,32 @@ const Messages = () => {
 		}, 100);
 	}, [messages]);
 
+	const isArray = Array.isArray(messages);
+
 	return (
 		<div className='px-4 flex-1 overflow-auto'>
-			{!loading &&
-				messages.length > 0 &&
-				messages.map((message) => (
-					<div key={message._id} ref={lastMessageRef}>
+			{/* ✅ If messages is an array, render normally */}
+			{!loading && isArray &&
+				messages.map((message, idx) => (
+					<div key={message._id || idx} ref={lastMessageRef}>
 						<Message message={message} />
 					</div>
 				))}
 
+			{/* ✅ If still loading, show skeletons */}
 			{loading && [...Array(3)].map((_, idx) => <MessageSkeleton key={idx} />)}
-			{!loading && messages.length === 0 && (
+
+			{/* ✅ If messages is an empty array */}
+			{!loading && isArray && messages.length === 0 && (
 				<p className='text-center'>Send a message to start the conversation</p>
+			)}
+
+			{/* ❌ If messages is not an array, prevent crash */}
+			{!loading && !isArray && (
+				<p className='text-center text-red-500'>Error: Messages data is invalid</p>
 			)}
 		</div>
 	);
 };
+
 export default Messages;
-
-// STARTER CODE SNIPPET
-// import Message from "./Message";
-
-// const Messages = () => {
-// 	return (
-// 		<div className='px-4 flex-1 overflow-auto'>
-// 			<Message />
-// 			<Message />
-// 			<Message />
-// 			<Message />
-// 			<Message />
-// 			<Message />
-// 			<Message />
-// 			<Message />
-// 			<Message />
-// 			<Message />
-// 			<Message />
-// 			<Message />
-// 		</div>
-// 	);
-// };
-// export default Messages;
