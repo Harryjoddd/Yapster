@@ -24,8 +24,11 @@ const useListenMessages = () => {
 				console.error("Notification sound error:", error);
 			}
 
-			// Append new message
-			setMessages((prevMessages) => [...prevMessages, updatedMessage]);
+			// Append new message safely
+			setMessages((prevMessages) => {
+				const safeArray = Array.isArray(prevMessages) ? prevMessages : [];
+				return [...safeArray, updatedMessage];
+			});
 		};
 
 		socket.on("newMessage", handleNewMessage);
