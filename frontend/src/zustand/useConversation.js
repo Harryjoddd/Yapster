@@ -1,4 +1,4 @@
-// useConversation.js (Zustand)
+// frontend/src/zustand/useConversation.js
 import { create } from "zustand";
 
 const useConversation = create((set) => ({
@@ -6,9 +6,15 @@ const useConversation = create((set) => ({
 	setSelectedConversation: (selectedConversation) => set({ selectedConversation }),
 	messages: [],
 	setMessages: (updater) =>
-		set((state) => ({
-			messages: typeof updater === "function" ? updater(state.messages) : updater,
-		})),
+		set((state) => {
+			const newMessages =
+				typeof updater === "function" ? updater(state.messages) : updater;
+
+			// Safety fallback to ensure it's always an array
+			return {
+				messages: Array.isArray(newMessages) ? newMessages : [],
+			};
+		}),
 }));
 
 export default useConversation;
