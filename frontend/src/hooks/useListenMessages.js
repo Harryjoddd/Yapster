@@ -1,23 +1,39 @@
 import { useEffect } from "react";
-
 import { useSocketContext } from "../context/SocketContext";
 import useConversation from "../zustand/useConversation";
-
 import notificationSound from "../assets/sounds/notification.mp3";
 
 const useListenMessages = () => {
 	const { socket } = useSocketContext();
-	const { messages, setMessages } = useConversation();
+	const { setMessages } = useConversation();
 
 	useEffect(() => {
-		socket?.on("newMessage", (newMessage) => {
-			newMessage.shouldShake = true;
-			const sound = new Audio(notificationSound);
-			sound.play();
-			setMessages([...messages, newMessage]);
-		});
+		if (!socket) return;
 
-		return () => socket?.off("newMessage");
-	}, [socket, setMessages, messages]);
+		const handleNewMessage = (newMessage) => {
+			if (!newMessage || typeof newMessage !== "object") return;
+
+			// Safely add shouldShake flag
+			const updatedMessage = { ...newMessage, shouldShake: true };
+
+			// Play notification sound
+			try {
+				const sound = new Audio(notificationSound);
+				sound.play();
+			} catch (error) {
+				console.error("Notification sound error:", error);
+			}
+
+			// Append new message
+			setMessages((prevMessages) => [...prevMessages, updatedMessage]);
+		};
+
+		socket.on("newMessage", handleNewMessage);
+
+		return () => {
+			socket.off("newMessage", handleNewMessage);
+		};
+	}, [socket, setMessages]);
 };
+
 export default useListenMessages;
