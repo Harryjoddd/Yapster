@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
 import generateTokenAndSetCookie from "../utils/generateToken.js";
 
+// 🔐 User Signup Controller
 export const signup = async (req, res) => {
 	try {
 		const { fullName, username, password, confirmPassword, gender } = req.body;
@@ -11,16 +12,12 @@ export const signup = async (req, res) => {
 		}
 
 		const user = await User.findOne({ username });
-
 		if (user) {
 			return res.status(400).json({ error: "Username already exists" });
 		}
 
-		// HASH PASSWORD HERE
 		const salt = await bcrypt.genSalt(10);
 		const hashedPassword = await bcrypt.hash(password, salt);
-
-		// https://avatar-placeholder.iran.liara.run/
 
 		const boyProfilePic = `https://avatar.iran.liara.run/public/boy?username=${username}`;
 		const girlProfilePic = `https://avatar.iran.liara.run/public/girl?username=${username}`;
@@ -34,9 +31,23 @@ export const signup = async (req, res) => {
 		});
 
 		if (newUser) {
-			// Generate JWT token here
+			// Automatically generate token & set cookie
 			generateTokenAndSetCookie(newUser._id, res);
 			await newUser.save();
+
+			// ✅ Auto-create Yapster Bot if not present
+			const botUsername = "yapsterbot";
+			const botExists = await User.findOne({ username: botUsername });
+			if (!botExists) {
+				const botPassword = await bcrypt.hash("yapster@ai", 10);
+				await User.create({
+					fullName: "Yapster Bot",
+					username: botUsername,
+					password: botPassword,
+					gender: "male",
+					profilePic: "https://robohash.org/yapster.png",
+				});
+			}
 
 			res.status(201).json({
 				_id: newUser._id,
@@ -53,6 +64,7 @@ export const signup = async (req, res) => {
 	}
 };
 
+// 🔐 Login Controller
 export const login = async (req, res) => {
 	try {
 		const { username, password } = req.body;
@@ -77,6 +89,7 @@ export const login = async (req, res) => {
 	}
 };
 
+// 🚪 Logout Controller
 export const logout = (req, res) => {
 	try {
 		res.cookie("jwt", "", { maxAge: 0 });

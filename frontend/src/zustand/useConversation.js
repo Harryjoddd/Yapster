@@ -1,4 +1,3 @@
-// frontend/src/zustand/useConversation.js
 import { create } from "zustand";
 
 const useConversation = create((set) => ({
@@ -10,7 +9,7 @@ const useConversation = create((set) => ({
 			const newMessages =
 				typeof updater === "function" ? updater(state.messages) : updater;
 
-			// Safety fallback to ensure it's always an array
+			// Safety fallback
 			return {
 				messages: Array.isArray(newMessages) ? newMessages : [],
 			};
