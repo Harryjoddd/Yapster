@@ -12,7 +12,7 @@ const useSendMessage = () => {
 		setLoading(true);
 
 		try {
-			// Create temp message to show immediately (optimistic UI)
+			// Optimistic UI: show user's message instantly
 			const tempMessage = {
 				_id: Date.now(),
 				senderId: "user",
@@ -27,8 +27,8 @@ const useSendMessage = () => {
 			const isBot = selectedConversation.username === "yapster-bot";
 
 			if (isBot) {
-				// Send message to AI backend route
-				const res = await fetch("/api/messages/ask-bot", {
+				// 🔥 Corrected API endpoint for Yapster Bot
+				const res = await fetch("/api/users/ai/chat", {
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
@@ -39,7 +39,7 @@ const useSendMessage = () => {
 				const data = await res.json();
 				if (data.error) throw new Error(data.error);
 
-				// Append bot reply
+				// Append AI bot reply
 				const aiReply = {
 					_id: Date.now() + 1,
 					senderId: selectedConversation._id,
@@ -51,7 +51,7 @@ const useSendMessage = () => {
 
 				setMessages((prev) => [...prev, aiReply]);
 			} else {
-				// Regular messaging
+				// Normal message to another user
 				const res = await fetch(`/api/messages/send/${selectedConversation._id}`, {
 					method: "POST",
 					headers: {
