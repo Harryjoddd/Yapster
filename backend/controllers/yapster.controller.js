@@ -1,21 +1,20 @@
-// /backend/controllers/yapster.controller.js
 import OpenAI from "openai";
 import dotenv from "dotenv";
 dotenv.config();
 
 const openai = new OpenAI({
-	apiKey: process.env.OPENAI_API_KEY,
+	apiKey: process.env.OPENAI_API_KEY
 });
 
 export const generateYapsterReply = async (req, res) => {
 	try {
 		const { message } = req.body;
 
-		console.log("✅ Incoming message to Yapster:", message);
+		console.log("✅ Incoming message:", message);
 
 		if (!message || typeof message !== "string") {
-			console.warn("⚠️ Invalid message format");
-			return res.status(400).json({ error: "Message is required and must be a string." });
+			console.warn("⚠️ Invalid message body");
+			return res.status(400).json({ error: "Message is required" });
 		}
 
 		const chatCompletion = await openai.chat.completions.create({
@@ -23,29 +22,26 @@ export const generateYapsterReply = async (req, res) => {
 			messages: [
 				{
 					role: "system",
-					content: "You are Yapster, a helpful AI chatbot assistant.",
+					content: "You are Yapster, a helpful chatbot in a messaging app."
 				},
 				{
 					role: "user",
-					content: message,
-				},
+					content: message
+				}
 			],
 			temperature: 0.7,
-			max_tokens: 100,
+			max_tokens: 100
 		});
 
 		const reply = chatCompletion.choices?.[0]?.message?.content?.trim();
 
-		console.log("🤖 Yapster reply:", reply);
+		console.log("🤖 Reply from OpenAI:", reply);
 
-		if (!reply) {
-			console.error("❌ No reply from OpenAI");
-			throw new Error("OpenAI returned no reply.");
-		}
+		if (!reply) throw new Error("No reply from OpenAI");
 
-		return res.status(200).json({ message: reply });
+		res.status(200).json({ message: reply });
 	} catch (error) {
-		console.error("❌ Yapster Error:", error);
-		return res.status(500).json({ error: "Something went wrong with Yapster bot." });
+		console.error("❌ Yapster AI Error:", error);
+		res.status(500).json({ error: "Something went wrong with Yapster bot." });
 	}
 };
