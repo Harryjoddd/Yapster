@@ -12,7 +12,7 @@ const useSendMessage = () => {
 		setLoading(true);
 
 		try {
-			// Optimistic UI message
+			// Optimistic UI: show user's message instantly
 			const tempMessage = {
 				_id: Date.now(),
 				senderId: "user",
