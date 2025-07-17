@@ -7,12 +7,15 @@ const useSendMessage = () => {
 	const { messages, setMessages, selectedConversation } = useConversation();
 
 	const sendMessage = async (message) => {
-		if (!selectedConversation?._id) return toast.error("No conversation selected");
+		if (!selectedConversation?._id) {
+			toast.error("No conversation selected");
+			return;
+		}
 
 		setLoading(true);
 
 		try {
-			// Optimistically show user message
+			// Optimistic UI: show user's message
 			const tempMessage = {
 				_id: Date.now(),
 				senderId: "user",
@@ -37,14 +40,13 @@ const useSendMessage = () => {
 
 				const data = await res.json();
 
-				if (!res.ok) {
-					console.error("❌ Bot error:", data.error);
-					throw new Error(data.error || "Yapster bot failed to reply.");
+				if (!res.ok || data.error) {
+					throw new Error(data.error || "Bot error");
 				}
 
-				console.log("🧠 Bot replied:", data.message); // ✅ Debugging output
+				console.log("🧠 Bot replied:", data.message); // Debugging log
 
-				const botReply = {
+				const aiReply = {
 					_id: Date.now() + 1,
 					senderId: selectedConversation._id,
 					receiverId: "user",
@@ -53,9 +55,8 @@ const useSendMessage = () => {
 					shouldShake: true,
 				};
 
-				setMessages((prev) => [...prev, botReply]);
+				setMessages((prev) => [...prev, aiReply]);
 			} else {
-				// Send message to regular user
 				const res = await fetch(`/api/messages/send/${selectedConversation._id}`, {
 					method: "POST",
 					headers: {
@@ -66,16 +67,15 @@ const useSendMessage = () => {
 
 				const data = await res.json();
 
-				if (!res.ok) {
-					console.error("❌ Message send failed:", data.error);
-					throw new Error(data.error || "Failed to send message.");
+				if (!res.ok || data.error) {
+					throw new Error(data.error || "Message failed");
 				}
 
 				setMessages((prev) => [...prev, data]);
 			}
 		} catch (error) {
-			console.error("❌ sendMessage error:", error);
-			toast.error(error.message || "Something went wrong.");
+			console.error("❌ sendMessage error:", error.message);
+			toast.error(error.message);
 		} finally {
 			setLoading(false);
 		}
