@@ -12,7 +12,7 @@ const useSendMessage = () => {
 		setLoading(true);
 
 		try {
-			// Optimistic UI: show user's message instantly
+			// Optimistically add user's message to chat
 			const tempMessage = {
 				_id: Date.now(),
 				senderId: "user",
@@ -21,7 +21,6 @@ const useSendMessage = () => {
 				createdAt: new Date().toISOString(),
 				shouldShake: false,
 			};
-
 			setMessages((prev) => [...prev, tempMessage]);
 
 			const isBot = selectedConversation.username === "yapster-bot";
@@ -36,9 +35,11 @@ const useSendMessage = () => {
 				});
 
 				const data = await res.json();
-				if (data.error) throw new Error(data.error);
 
-				const aiReply = {
+				if (!res.ok) throw new Error(data.error || "Bot failed to reply.");
+
+				// Show bot reply
+				const botReply = {
 					_id: Date.now() + 1,
 					senderId: selectedConversation._id,
 					receiverId: "user",
@@ -47,8 +48,9 @@ const useSendMessage = () => {
 					shouldShake: true,
 				};
 
-				setMessages((prev) => [...prev, aiReply]);
+				setMessages((prev) => [...prev, botReply]);
 			} else {
+				// Normal user messaging
 				const res = await fetch(`/api/messages/send/${selectedConversation._id}`, {
 					method: "POST",
 					headers: {
@@ -58,12 +60,13 @@ const useSendMessage = () => {
 				});
 
 				const data = await res.json();
-				if (data.error) throw new Error(data.error);
+				if (!res.ok) throw new Error(data.error || "Failed to send message");
 
 				setMessages((prev) => [...prev, data]);
 			}
 		} catch (error) {
-			toast.error(error.message);
+			console.error("💥 Error sending message:", error);
+			toast.error(error.message || "Something went wrong");
 		} finally {
 			setLoading(false);
 		}
